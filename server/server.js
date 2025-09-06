@@ -2,8 +2,8 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 const Menu = require('../models/Menu');
-const config = require('../config');
-const db = require('../db/mongoose');
+require('dotenv').config({ path: path.join(__dirname, '../config/config.env') });
+const db = require('../config/db');
 
 const PROTO_PATH = path.join(__dirname, '../protos/restaurant.proto');
 
@@ -144,7 +144,7 @@ async function startServer() {
 
     server.addService(restaurantProto.RestaurantService.service, restaurantService);
 
-    const PORT = config.GRPC_PORT;
+    const PORT = parseInt(process.env.GRPC_PORT || process.env.PORT || '50051', 10);
 
     server.bindAsync(
         `0.0.0.0:${PORT}`,

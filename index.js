@@ -4,8 +4,8 @@ const { client } = require('./client/client.js');
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+require('dotenv').config({ path: path.join(__dirname, 'config/config.env') });
 
-const config = require('./config');
 const app = express();
 
 app.set("views", path.join(__dirname, "web"));
@@ -110,7 +110,7 @@ app.post("/remove", async (req, res) => {
   }
 });
 
-const PORT = config.WEB_PORT;
+const PORT = parseInt(process.env.WEB_PORT || '3000', 10);
 app.listen(PORT, () => {
   console.log(`Web Server running at port ${PORT}`);
 });

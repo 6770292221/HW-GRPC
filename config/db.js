@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
-const { MONGODB_URI } = require('../config');
 
 async function connect() {
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/grpc_menu_db';
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(uri);
     console.log('Connected to MongoDB successfully');
   } catch (err) {
     console.error('MongoDB connection error:', err);
