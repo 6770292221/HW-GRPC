@@ -1,36 +1,17 @@
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
+
+const { client } = require('./client/client.js');
+
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const PROTO_PATH = path.join(__dirname, './protos/menu.proto');
-
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-});
-
-const menuProto = grpc.loadPackageDefinition(packageDefinition).menu;
-
-// Create gRPC client to connect to our gRPC server
-const client = new menuProto.MenuService(
-  'localhost:50051',
-  grpc.credentials.createInsecure()
-);
-
 const app = express();
 
-app.set("views", path.join(__dirname, "views"));
+app.set("views", path.join(__dirname, "web"));
 app.set("view engine", "hbs");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
-// Helper function to promisify gRPC calls
 function promisifyCall(method, request) {
   return new Promise((resolve, reject) => {
     method(request, (error, response) => {
@@ -45,20 +26,10 @@ function promisifyCall(method, request) {
 
 app.get("/", async (req, res) => {
   try {
-    const data = await promisifyCall(client.listMenus.bind(client), {
-      page: 1,
-      limit: 10
+    const data = await promisifyCall(client.GetAllMenu.bind(client), {});
+    res.render("menu", {
+      results: data.menu || []
     });
-    if (!data.success) {
-      res.render("menu", {
-        results: [],
-        error: "Failed to fetch menus"
-      });
-    } else {
-      res.render("menu", {
-        results: data.menus
-      });
-    }
   } catch (err) {
     console.error("Error fetching menus:", err);
     res.render("menu", {
@@ -72,17 +43,17 @@ app.post("/save", async (req, res) => {
   try {
     let newMenuItem = {
       name: req.body.name,
-      price: parseFloat(req.body.price)
+      price: Math.floor(parseFloat(req.body.price))
     };
 
-    const data = await promisifyCall(client.createMenu.bind(client), newMenuItem);
-    if (data.success) {
+    const data = await promisifyCall(client.Insert.bind(client), newMenuItem);
+    if (data && data.id) {
       console.log("New Menu created successfully", data);
       res.redirect("/");
     } else {
       res.render("menu", {
         results: [],
-        error: data.message
+        error: "Failed to create menu item"
       });
     }
   } catch (err) {
@@ -99,18 +70,18 @@ app.post("/update", async (req, res) => {
     const updateMenuItem = {
       id: req.body.id,
       name: req.body.name,
-      price: parseFloat(req.body.price)
+      price: Math.floor(parseFloat(req.body.price))
     };
     console.log("update Item %s %s %d", updateMenuItem.id, req.body.name, req.body.price);
 
-    const data = await promisifyCall(client.updateMenu.bind(client), updateMenuItem);
-    if (data.success) {
+    const data = await promisifyCall(client.Update.bind(client), updateMenuItem);
+    if (data && data.id) {
       console.log("Menu Item updated successfully", data);
       res.redirect("/");
     } else {
       res.render("menu", {
         results: [],
-        error: data.message
+        error: "Failed to update menu item"
       });
     }
   } catch (err) {
@@ -124,18 +95,11 @@ app.post("/update", async (req, res) => {
 
 app.post("/remove", async (req, res) => {
   try {
-    const data = await promisifyCall(client.deleteMenu.bind(client), {
+    const data = await promisifyCall(client.Remove.bind(client), {
       id: req.body.menuitem_id
     });
-    if (data.success) {
-      console.log("Menu Item removed successfully");
-      res.redirect("/");
-    } else {
-      res.render("menu", {
-        results: [],
-        error: data.message
-      });
-    }
+    console.log("Menu Item removed successfully");
+    res.redirect("/");
   } catch (err) {
     console.error("Error removing menu:", err);
     res.render("menu", {
