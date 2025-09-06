@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>gRPC Menu Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; text-align: center; }
+        .form-section { 
+            background: #f5f5f5; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px; 
+        }
+        .menu-list { margin: 20px 0; }
+        .menu-item { 
+            background: white; 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .menu-info { flex: 1; }
+        .menu-actions { display: flex; gap: 10px; }
+        input, button { 
+            padding: 8px 12px; 
+            margin: 5px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+        }
+        button:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .error { color: red; margin: 10px 0; }
+        .success { color: green; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ gRPC Menu Management System</h1>
+        <p style="text-align: center; color: #666;">
+            Web interface for gRPC Menu Service with MongoDB
+        </p>
+        
+        {{#if error}}
+        <div class="error">❌ Error: {{error}}</div>
+        {{/if}}
+
+        <!-- Add New Menu Item Form -->
+        <div class="form-section">
+            <h3>➕ Add New Menu Item</h3>
+            <form action="/save" method="post">
+                <input type="text" name="name" placeholder="Menu Name" required>
+                <input type="number" name="price" step="0.01" placeholder="Price" required>
+                <button type="submit">Add Menu Item</button>
+            </form>
+        </div>
+
+        <!-- Menu List -->
+        <div class="menu-list">
+            <h3>📋 Current Menu Items (Total: {{results.length}})</h3>
+            
+            {{#if results}}
+                {{#each results}}
+                <div class="menu-item">
+                    <div class="menu-info">
+                        <strong>{{this.name}}</strong> - ${{this.price}}
+                        <br>
+                        <small style="color: #666;">
+                            ID: {{this.id}} | 
+                            Created: {{this.createdAt}} | 
+                            Updated: {{this.updatedAt}}
+                        </small>
+                    </div>
+                    <div class="menu-actions">
+                        <!-- Update Form -->
+                        <form action="/update" method="post" style="display: inline;">
+                            <input type="hidden" name="id" value="{{this.id}}">
+                            <input type="text" name="name" value="{{this.name}}" style="width: 120px;">
+                            <input type="number" name="price" value="{{this.price}}" step="0.01" style="width: 80px;">
+                            <button type="submit" class="btn-warning">Update</button>
+                        </form>
+                        
+                        <!-- Delete Form -->
+                        <form action="/remove" method="post" style="display: inline;">
+                            <input type="hidden" name="menuitem_id" value="{{this.id}}">
+                            <button type="submit" class="btn-danger" 
+                                    onclick="return confirm('Are you sure you want to delete {{this.name}}?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {{/each}}
+            {{else}}
+                <div style="text-align: center; color: #666; padding: 40px;">
+                    <h4>No menu items found</h4>
+                    <p>Add your first menu item using the form above!</p>
+                </div>
+            {{/if}}
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 40px; color: #666; font-size: 12px;">
+            <p>🚀 Powered by gRPC + MongoDB + Express.js</p>
+            <p>Assignment: Connect gRPC Server with MongoDB</p>
+        </div>
+    </div>
+</body>
+</html>
