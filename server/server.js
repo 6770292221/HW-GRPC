@@ -1,8 +1,9 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
-const mongoose = require('mongoose');
 const Menu = require('../models/Menu');
+const config = require('../config');
+const db = require('../db/mongoose');
 
 const PROTO_PATH = path.join(__dirname, '../protos/restaurant.proto');
 
@@ -15,18 +16,6 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 });
 
 const restaurantProto = grpc.loadPackageDefinition(packageDefinition);
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://rest_user:MySecret123!@cluster0.k8zthtm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-
-async function connectToDatabase() {
-    try {
-        await mongoose.connect(MONGODB_URI);
-        console.log('Connected to MongoDB successfully');
-    } catch (error) {
-        console.error('MongoDB connection error:', error);
-        process.exit(1);
-    }
-}
 
 const restaurantService = {
     async GetAllMenu(call, callback) {
@@ -149,13 +138,13 @@ const restaurantService = {
 };
 
 async function startServer() {
-    await connectToDatabase();
+    await db.connect();
 
     const server = new grpc.Server();
 
     server.addService(restaurantProto.RestaurantService.service, restaurantService);
 
-    const PORT = process.env.PORT || 50051;
+    const PORT = config.GRPC_PORT;
 
     server.bindAsync(
         `0.0.0.0:${PORT}`,

@@ -5,6 +5,7 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const config = require('./config');
 const app = express();
 
 app.set("views", path.join(__dirname, "web"));
@@ -109,7 +110,7 @@ app.post("/remove", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = config.WEB_PORT;
 app.listen(PORT, () => {
   console.log(`Web Server running at port ${PORT}`);
 });
