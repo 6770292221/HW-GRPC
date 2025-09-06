@@ -138,7 +138,11 @@ const restaurantService = {
 };
 
 async function startServer() {
-    await db.connect();
+    const connectDb = typeof db === 'function' ? db : db.connect;
+    if (typeof connectDb !== 'function') {
+        throw new Error('Invalid DB module export: expected a function or { connect }');
+    }
+    await connectDb();
 
     const server = new grpc.Server();
 
